@@ -1,11 +1,11 @@
-import React, { useState,useEffect } from 'react'
+import { useEffect, useState } from "react"
+import { getUsersPaginated } from '../api/userService';
 
-export default function UserList() {
-   
- const [loading, setLoading] = useState(false);
+export function PaginationList1() {
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [page, setPage] = useState(1);
-    const [posts, setPosts] = useState([]);
+    const [users, setUsers] = useState([]);
 
     const POSTS_PER_PAGE = 10;
     const TOTAL_POSTS = 100;
@@ -15,21 +15,19 @@ export default function UserList() {
     useEffect(() => {
         const fetchPosts = async () => {
             try{
-               const response = await fetch(
-                `https://reqres.in/api/users?page=${page}&per_page=${POSTS_PER_PAGE}`, 
-                { headers: { "x-api-key": "reqres_183efcb187344c9fbd739f61cdb8c721" } }
-                );
-                if (!response.ok) {
-                    throw new Error("Failed to fetch posts.")
-                }
+                // const response = await fetch(
+                // `https://reqres.in/api/users?page=${page}&per_page=${POSTS_PER_PAGE}`, 
+                // { headers: { 'x-api-key': 'reqres_9c58e2a469fe4984bf1dc39255ee611d' } }
+                // );
+                const response = await getUsersPaginated(page, POSTS_PER_PAGE)
 
-                const data = await response.json();
-                setPosts(data);
-                setError(null);
+                const data = response.data.data;
+                setUsers(data);
             } catch (err) {
-                setError(err.message);
+                const errorMessage = err.response?.message || err.message || 'Failed to fetch the users';
+                setError(errorMessage);
             } finally {
-                setLoading (false);
+                setLoading = false;
             }
         };
 
@@ -79,11 +77,21 @@ export default function UserList() {
 
             {!loading && !error && (
                 <div>
-                    {posts.map((post) => (
-                        <div key={post.id}>
-                            <h3>Post #{(page-1) * POSTS_PER_PAGE + posts.indexOf(post) + 1}</h3>
-                            <h4>{post.title}</h4>
-                            <p>{post.body}</p>
+                    {users.map((user) => (
+                        <div key={user.id}>
+                            <h3>Post #{(page-1) * POSTS_PER_PAGE + users.indexOf(user) + 1}</h3>
+                            {/* <h4>{user.title}</h4>
+                            <p>{user.body}</p> */}
+                            <img 
+                            src={user.avatar} 
+                            alt={`${user.first_name} ${user.last_name}`}
+                            style={{ width: '60px', height: '60px', borderRadius: '50%' }}
+                            />
+                            <div>
+                            <h3>{user.first_name} {user.last_name}</h3>
+                            <p style={{ margin: '5px 0', color: '#666' }}>{user.email}</p>
+                            <p style={{ margin: '5px 0', fontSize: '0.9em', color: '#888' }}>User ID: {user.id}</p>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -108,7 +116,6 @@ export default function UserList() {
                 })}
                 </div>
             </div>
-            
         </div>
     );
 };
